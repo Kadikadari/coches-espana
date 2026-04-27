@@ -1,7 +1,6 @@
 'use client';
 
 import { useState, useEffect } from "react";
-import Image from "next/image";
 import Link from "next/link";
 import { supabase } from "@/lib/supabase";
 
@@ -32,18 +31,20 @@ export default function Home() {
 
   async function fetchCars() {
     setLoading(true);
-    const { data, error } = await supabase
-      .from('cars')
-      .select('*')
-      .order('created_at', { ascending: false });
+    try {
+      const { data, error } = await supabase
+        .from('cars')
+        .select('*')
+        .order('created_at', { ascending: false });
 
-    if (error) {
-      console.error('Error fetching cars:', error);
-    } else {
+      if (error) throw error;
       setCars(data || []);
       setFilteredCars(data || []);
+    } catch (err) {
+      console.error('Error:', err);
+    } finally {
+      setLoading(false);
     }
-    setLoading(false);
   }
 
   const handleSearch = () => {
@@ -59,12 +60,15 @@ export default function Home() {
 
   return (
     <div className="min-h-screen bg-gray-50 font-sans text-gray-900">
-      <header className="bg-white shadow-sm sticky top-0 z-50">
-        <div className="max-w-7xl mx-auto px-4 py-4 flex justify-between items-center">
-          <Link href="/" className="text-2xl font-black text-blue-600 tracking-tighter">CochesEspaña</Link>
+      {/* Header التعديل الجذري هنا */}
+      <header className="bg-white border-b border-gray-100 sticky top-0 z-[100]">
+        <div className="max-w-7xl mx-auto px-4 h-16 md:h-20 flex justify-between items-center">
+          <Link href="/" className="text-xl md:text-2xl font-black text-blue-600 tracking-tighter">
+            CochesEspaña
+          </Link>
 
-          {/* Desktop Navigation */}
-          <nav className="hidden md:flex space-x-8 items-center">
+          {/* Desktop Nav */}
+          <nav className="hidden md:flex items-center gap-8">
             <Link href="/" className="text-gray-600 hover:text-blue-600 font-bold transition">Comprar</Link>
             <Link href="/sell" className="text-gray-600 hover:text-blue-600 font-bold transition">Vender</Link>
             <Link href="/sell" className="bg-blue-600 text-white px-6 py-2.5 rounded-xl hover:bg-blue-700 transition font-black shadow-lg shadow-blue-100">
@@ -72,52 +76,56 @@ export default function Home() {
             </Link>
           </nav>
 
-          {/* Mobile Menu Button */}
+          {/* Mobile Menu Button - جعلناه أوضح */}
           <button
+            type="button"
             onClick={() => setIsMenuOpen(!isMenuOpen)}
-            className="md:hidden p-2 text-gray-600 hover:text-blue-600 transition focus:outline-none"
+            className="md:hidden p-2 rounded-lg text-gray-600 hover:bg-gray-100 focus:outline-none"
           >
+            <span className="sr-only">Menu</span>
             {isMenuOpen ? (
-              <svg className="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" /></svg>
+              <svg className="w-7 h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M6 18L18 6M6 6l12 12" /></svg>
             ) : (
-              <svg className="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 6h16M4 12h16m-7 6h7" /></svg>
+              <svg className="w-7 h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M4 6h16M4 12h16M4 18h16" /></svg>
             )}
           </button>
         </div>
 
-        {/* Mobile Navigation Dropdown */}
+        {/* Mobile Dropdown - كود أبجد هوز لضمان الظهور */}
         {isMenuOpen && (
-          <div className="md:hidden bg-white border-t border-gray-100 p-4 space-y-4 shadow-xl animate-in slide-in-from-top duration-300">
-            <Link href="/" onClick={() => setIsMenuOpen(false)} className="block py-2 text-lg font-bold text-gray-700 hover:text-blue-600">Comprar</Link>
-            <Link href="/sell" onClick={() => setIsMenuOpen(false)} className="block py-2 text-lg font-bold text-gray-700 hover:text-blue-600">Vender</Link>
-            <Link href="/sell" onClick={() => setIsMenuOpen(false)} className="block w-full bg-blue-600 text-white text-center py-4 rounded-2xl font-black shadow-lg">
-              Publicar Anuncio
-            </Link>
+          <div className="md:hidden absolute top-full left-0 right-0 bg-white border-b border-gray-200 shadow-2xl z-[99]">
+            <div className="p-4 space-y-4">
+              <Link href="/" onClick={() => setIsMenuOpen(false)} className="block py-3 text-lg font-bold text-gray-700 border-b border-gray-50">Comprar</Link>
+              <Link href="/sell" onClick={() => setIsMenuOpen(false)} className="block py-3 text-lg font-bold text-gray-700 border-b border-gray-50">Vender</Link>
+              <Link href="/sell" onClick={() => setIsMenuOpen(false)} className="block w-full bg-blue-600 text-white text-center py-4 rounded-2xl font-black shadow-lg mt-2">
+                Publicar Anuncio
+              </Link>
+            </div>
           </div>
         )}
       </header>
 
       <section className="bg-blue-600 text-white py-16 md:py-24 px-4 relative overflow-hidden">
         <div className="max-w-4xl mx-auto text-center relative z-10">
-          <h1 className="text-4xl md:text-6xl font-black mb-6 tracking-tight leading-tight">Coches de Segunda Mano en España</h1>
-          <p className="text-lg md:text-xl mb-12 opacity-90 max-w-2xl mx-auto font-light">Busca entre miles de ofertas verificadas en toda la península.</p>
+          <h1 className="text-3xl md:text-6xl font-black mb-6 tracking-tight leading-tight">Coches de Segunda Mano en España</h1>
+          <p className="text-lg md:text-xl mb-12 opacity-90 max-w-2xl mx-auto font-light">Encuentra las mejores ofertas de particulares en toda la península.</p>
 
           <div className="bg-white p-2 md:p-3 rounded-2xl shadow-2xl flex flex-col md:flex-row gap-2 items-center">
-            <div className="w-full flex-1 relative group">
+            <div className="w-full flex-1 relative">
               <select
                 value={searchBrand}
                 onChange={(e) => setSearchBrand(e.target.value)}
-                className="w-full px-4 py-4 rounded-xl border-none text-gray-800 focus:ring-0 appearance-none bg-gray-50 group-hover:bg-gray-100 transition cursor-pointer"
+                className="w-full px-4 py-4 rounded-xl border-none text-gray-800 focus:ring-0 appearance-none bg-gray-50"
               >
                 <option value="Todos">Todas las marcas</option>
                 {carBrands.sort().map(brand => <option key={brand} value={brand}>{brand}</option>)}
               </select>
             </div>
-            <div className="w-full md:w-64 relative group">
+            <div className="w-full md:w-64 relative">
               <select
                 value={searchLocation}
                 onChange={(e) => setSearchLocation(e.target.value)}
-                className="w-full px-4 py-4 rounded-xl border-none text-gray-800 focus:ring-0 appearance-none bg-gray-50 group-hover:bg-gray-100 transition cursor-pointer"
+                className="w-full px-4 py-4 rounded-xl border-none text-gray-800 focus:ring-0 appearance-none bg-gray-50"
               >
                 <option value="Toda España">Toda España</option>
                 {spanishProvinces.sort().map(province => <option key={province} value={province}>{province}</option>)}
@@ -125,7 +133,7 @@ export default function Home() {
             </div>
             <button
               onClick={handleSearch}
-              className="w-full md:w-auto bg-orange-500 hover:bg-orange-600 text-white px-10 py-4 rounded-xl font-black transition shadow-lg flex items-center justify-center gap-2 transform active:scale-95"
+              className="w-full md:w-auto bg-orange-500 hover:bg-orange-600 text-white px-10 py-4 rounded-xl font-black transition shadow-lg"
             >
               BUSCAR
             </button>
@@ -134,9 +142,7 @@ export default function Home() {
       </section>
 
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12 md:py-16">
-        <div className="flex justify-between items-end mb-10">
-          <h2 className="text-2xl md:text-3xl font-black">Últimos anuncios</h2>
-        </div>
+        <h2 className="text-2xl md:text-3xl font-black mb-10">Últimos anuncios</h2>
 
         {loading ? (
           <div className="flex justify-center py-20">
@@ -173,12 +179,11 @@ export default function Home() {
       <footer className="bg-gray-900 text-white py-16">
         <div className="max-w-7xl mx-auto px-4 text-center">
           <h4 className="text-2xl font-black mb-4 text-blue-500">CochesEspaña</h4>
-          <p className="text-gray-500 text-sm mb-8 max-w-md mx-auto">El portal líder para la compra y venta de vehículos de ocasión en toda España.</p>
-          <div className="flex justify-center gap-6 mb-8">
-            <Link href="/" className="hover:text-blue-500 transition">Comprar</Link>
-            <Link href="/sell" className="hover:text-blue-500 transition">Vender</Link>
+          <p className="text-gray-500 text-sm mb-8 max-w-md mx-auto">© 2024 El portal líder para la compra y venta de vehículos en España.</p>
+          <div className="flex justify-center gap-6">
+            <Link href="/" className="hover:text-blue-500 transition font-bold">Comprar</Link>
+            <Link href="/sell" className="hover:text-blue-500 transition font-bold">Vender</Link>
           </div>
-          <p className="text-gray-600 text-xs">© 2024 CochesEspaña. Todos los derechos reservados.</p>
         </div>
       </footer>
     </div>
