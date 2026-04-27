@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
+import { SpeedInsights } from "@vercel/speed-insights/next";
 import "./globals.css";
 
 const geistSans = Geist({
@@ -22,7 +23,7 @@ export const metadata: Metadata = {
     "coches híbridos", "Seat segunda mano", "Volkswagen ocasión", "BMW de segunda mano",
     "Mercedes usados", "Audi km 0", "Toyota híbridos", "coches en Madrid",
     "coches en Barcelona", "coches en Valencia", "coches en Sevilla", "coches en Málaga",
-    "concesionarios España", "venta de automóviles", "motor España", "mejores ofertas coches",
+    "concesionarios España", "venta de automóviles", "motor España", "meجores ofertas coches",
     "coches diésel", "coches gasolina", "furgonetas de ocasión", "suv segunda mano"
   ],
   authors: [{ name: "CochesEspaña Team" }],
@@ -51,7 +52,10 @@ export default function RootLayout({
       lang="es"
       className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}
     >
-      <body className="min-h-full flex flex-col">{children}</body>
+      <body className="min-h-full flex flex-col">
+        {children}
+        <SpeedInsights />
+      </body>
     </html>
   );
 }
