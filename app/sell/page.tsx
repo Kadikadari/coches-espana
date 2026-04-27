@@ -2,46 +2,71 @@
 
 import { useState } from "react";
 import Link from "next/link";
+import { supabase } from "@/lib/supabase";
 
-const spanishRegions = [
-  "Andalucía", "Aragón", "Asturias", "Baleares", "Canarias", "Cantabria",
-  "Castilla y León", "Castilla-La Mancha", "Cataluña", "Comunidad Valenciana",
-  "Extremadura", "Galicia", "Madrid", "Murcia", "Navarra", "País Vasco", "La Rioja", "Ceuta", "Melilla"
+const spanishProvinces = [
+  "Álava", "Albacete", "Alicante", "Almería", "Asturias", "Ávila", "Badajoz", "Baleares", "Barcelona", "Burgos",
+  "Cáceres", "Cádiz", "Cantabria", "Castellón", "Ciudad Real", "Córdoba", "A Coruña", "Cuenca", "Girona", "Granada",
+  "Guadalajara", "Guipúzcoa", "Huelva", "Huesca", "Jaén", "León", "Lleida", "Lugo", "Madrid", "Málaga",
+  "Murcia", "Navarra", "Ourense", "Palencia", "Las Palmas", "Pontevedra", "La Rioja", "Salamanca", "Segovia", "Sevilla",
+  "Soria", "Tarragona", "Santa Cruz de Tenerife", "Teruel", "Toledo", "Valencia", "Valladolid", "Vizcaya", "Zamora", "Zaragoza", "Ceuta", "Melilla"
 ];
 
 export default function SellPage() {
   const [submitted, setSubmitted] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [formData, setFormData] = useState({
+    brand: '',
+    model: '',
+    year: '',
+    price: '',
+    km: '',
+    location: 'Madrid',
+    fuel: 'Gasolina',
+    transmission: 'Manual',
+    description: '',
+    phone: '',
+    seller: ''
+  });
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleChange = (e: any) => {
+    const { name, value } = e.target;
+    setFormData(prev => ({ ...prev, [name]: value }));
+  };
+
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
 
-    // Simulate API call
-    setTimeout(() => {
+    const { error } = await supabase
+      .from('cars')
+      .insert([formData]);
+
+    if (error) {
+      alert("Error al publicar el anuncio: " + error.message);
+      setLoading(false);
+    } else {
       setLoading(false);
       setSubmitted(true);
       window.scrollTo({ top: 0, behavior: 'smooth' });
-    }, 1500);
+    }
   };
 
   if (submitted) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center p-4">
-        <div className="max-w-md w-full bg-white rounded-2xl shadow-xl p-8 text-center">
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center p-4 text-center">
+        <div className="max-w-md w-full bg-white rounded-3xl shadow-xl p-10">
           <div className="w-20 h-20 bg-green-100 text-green-600 rounded-full flex items-center justify-center mx-auto mb-6">
-            <svg className="w-10 h-10" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="3" d="M5 13l4 4L19 7" />
-            </svg>
+            <svg className="w-10 h-10" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="3" d="M5 13l4 4L19 7" /></svg>
           </div>
-          <h1 className="text-2xl font-bold mb-2">¡Anuncio publicado!</h1>
-          <p className="text-gray-600 mb-8">Tu coche ya está visible para miles de compradores en toda España.</p>
+          <h1 className="text-3xl font-black mb-2">¡Enhorabuena!</h1>
+          <p className="text-gray-500 mb-8">Tu coche ha sido publicado con éxito y ya está visible en CochesEspaña.</p>
           <div className="space-y-3">
-            <Link href="/" className="block w-full bg-blue-600 text-white py-3 rounded-xl font-bold hover:bg-blue-700 transition">
-              Volver al inicio
+            <Link href="/" className="block w-full bg-blue-600 text-white py-4 rounded-2xl font-black hover:bg-blue-700 transition">
+              Ver mi anuncio
             </Link>
-            <button onClick={() => setSubmitted(false)} className="block w-full text-blue-600 font-medium py-2 hover:underline">
-              Publicar otro anuncio
+            <button onClick={() => setSubmitted(false)} className="text-blue-600 font-bold hover:underline">
+              Publicar otro vehículo
             </button>
           </div>
         </div>
@@ -52,122 +77,108 @@ export default function SellPage() {
   return (
     <div className="min-h-screen bg-gray-50">
       <header className="bg-white shadow-sm sticky top-0 z-50">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 flex justify-between items-center">
+        <div className="max-w-7xl mx-auto px-4 py-4 flex justify-between items-center">
           <Link href="/" className="text-2xl font-bold text-blue-600">CochesEspaña</Link>
-          <nav className="space-x-4">
-            <Link href="/" className="text-gray-600 hover:text-blue-600 font-medium">Volver al inicio</Link>
-          </nav>
+          <Link href="/" className="text-gray-500 font-bold hover:text-blue-600 transition">Volver</Link>
         </div>
       </header>
 
       <main className="max-w-3xl mx-auto px-4 py-12">
-        <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-8">
-          <h1 className="text-3xl font-bold mb-2">Publicar nuevo anuncio</h1>
-          <p className="text-gray-500 mb-8">Vende tu coche rápido y al mejor precio en toda España.</p>
+        <div className="bg-white rounded-3xl shadow-sm border border-gray-100 p-8 md:p-12">
+          <h1 className="text-4xl font-black mb-2 text-gray-900 tracking-tight">Vende tu coche hoy</h1>
+          <p className="text-gray-500 mb-10 text-lg italic">Completa los datos y recibe llamadas de compradores interesados.</p>
 
-          <form onSubmit={handleSubmit} className="space-y-6">
-            {/* Basic Info Section */}
-            <section className="space-y-4">
-              <h2 className="text-xl font-semibold border-b pb-2">Información del vehículo</h2>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Marca</label>
-                  <input required type="text" placeholder="Ej. Seat" className="w-full px-4 py-2 rounded-lg border border-gray-300 focus:ring-2 focus:ring-blue-500 focus:outline-none" />
+          <form onSubmit={handleSubmit} className="space-y-8">
+            <section className="space-y-6">
+              <h2 className="text-xl font-black text-blue-600 flex items-center gap-2">
+                <span className="w-8 h-8 rounded-lg bg-blue-50 flex items-center justify-center text-sm">1</span>
+                Datos del Vehículo
+              </h2>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div className="space-y-2">
+                  <label className="text-sm font-bold text-gray-600 ml-1">Marca</label>
+                  <input required name="brand" value={formData.brand} onChange={handleChange} type="text" placeholder="Ej. Seat" className="w-full px-5 py-3 rounded-2xl border-gray-200 bg-gray-50 focus:bg-white focus:ring-2 focus:ring-blue-500 transition outline-none" />
                 </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Modelo</label>
-                  <input required type="text" placeholder="Ej. Ibiza" className="w-full px-4 py-2 rounded-lg border border-gray-300 focus:ring-2 focus:ring-blue-500 focus:outline-none" />
+                <div className="space-y-2">
+                  <label className="text-sm font-bold text-gray-600 ml-1">Modelo</label>
+                  <input required name="model" value={formData.model} onChange={handleChange} type="text" placeholder="Ej. Ibiza" className="w-full px-5 py-3 rounded-2xl border-gray-200 bg-gray-50 focus:bg-white focus:ring-2 focus:ring-blue-500 transition outline-none" />
                 </div>
               </div>
 
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Año</label>
-                  <input required type="number" placeholder="2023" className="w-full px-4 py-2 rounded-lg border border-gray-300 focus:ring-2 focus:ring-blue-500 focus:outline-none" />
+              <div className="grid grid-cols-2 md:grid-cols-3 gap-6">
+                <div className="space-y-2">
+                  <label className="text-sm font-bold text-gray-600 ml-1">Año</label>
+                  <input required name="year" value={formData.year} onChange={handleChange} type="number" placeholder="2022" className="w-full px-5 py-3 rounded-2xl border-gray-200 bg-gray-50 focus:bg-white focus:ring-2 focus:ring-blue-500 transition outline-none" />
                 </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Kilómetros</label>
-                  <input required type="number" placeholder="0" className="w-full px-4 py-2 rounded-lg border border-gray-300 focus:ring-2 focus:ring-blue-500 focus:outline-none" />
+                <div className="space-y-2">
+                  <label className="text-sm font-bold text-gray-600 ml-1">Kms</label>
+                  <input required name="km" value={formData.km} onChange={handleChange} type="number" placeholder="25000" className="w-full px-5 py-3 rounded-2xl border-gray-200 bg-gray-50 focus:bg-white focus:ring-2 focus:ring-blue-500 transition outline-none" />
                 </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Precio (€)</label>
-                  <input required type="number" placeholder="10000" className="w-full px-4 py-2 rounded-lg border border-gray-300 focus:ring-2 focus:ring-blue-500 focus:outline-none" />
+                <div className="space-y-2 col-span-2 md:col-span-1">
+                  <label className="text-sm font-bold text-gray-600 ml-1">Precio (€)</label>
+                  <input required name="price" value={formData.price} onChange={handleChange} type="number" placeholder="15000" className="w-full px-5 py-3 rounded-2xl border-gray-200 bg-gray-50 focus:bg-white focus:ring-2 focus:ring-blue-500 transition outline-none font-bold text-blue-600" />
                 </div>
               </div>
             </section>
 
-            {/* Technical Specs */}
-            <section className="space-y-4">
-              <h2 className="text-xl font-semibold border-b pb-2">Especificaciones</h2>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Combustible</label>
-                  <select className="w-full px-4 py-2 rounded-lg border border-gray-300 focus:ring-2 focus:ring-blue-500 focus:outline-none bg-white">
+            <section className="space-y-6">
+              <h2 className="text-xl font-black text-blue-600 flex items-center gap-2">
+                <span className="w-8 h-8 rounded-lg bg-blue-50 flex items-center justify-center text-sm">2</span>
+                Especificaciones
+              </h2>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div className="space-y-2">
+                  <label className="text-sm font-bold text-gray-600 ml-1">Combustible</label>
+                  <select name="fuel" value={formData.fuel} onChange={handleChange} className="w-full px-5 py-3 rounded-2xl border-gray-200 bg-gray-50 focus:bg-white focus:ring-2 focus:ring-blue-500 transition outline-none appearance-none">
                     <option>Gasolina</option>
                     <option>Diésel</option>
                     <option>Híbrido</option>
                     <option>Eléctrico</option>
                   </select>
                 </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Caja de cambios</label>
-                  <select className="w-full px-4 py-2 rounded-lg border border-gray-300 focus:ring-2 focus:ring-blue-500 focus:outline-none bg-white">
+                <div className="space-y-2">
+                  <label className="text-sm font-bold text-gray-600 ml-1">Caja de cambios</label>
+                  <select name="transmission" value={formData.transmission} onChange={handleChange} className="w-full px-5 py-3 rounded-2xl border-gray-200 bg-gray-50 focus:bg-white focus:ring-2 focus:ring-blue-500 transition outline-none appearance-none">
                     <option>Manual</option>
                     <option>Automático</option>
                   </select>
                 </div>
               </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Ubicación</label>
-                <select className="w-full px-4 py-2 rounded-lg border border-gray-300 focus:ring-2 focus:ring-blue-500 focus:outline-none bg-white">
-                  {spanishRegions.map(region => (
-                    <option key={region}>{region}</option>
-                  ))}
+              <div className="space-y-2">
+                <label className="text-sm font-bold text-gray-600 ml-1">Provincia</label>
+                <select name="location" value={formData.location} onChange={handleChange} className="w-full px-5 py-3 rounded-2xl border-gray-200 bg-gray-50 focus:bg-white focus:ring-2 focus:ring-blue-500 transition outline-none appearance-none">
+                  {spanishProvinces.sort().map(p => <option key={p}>{p}</option>)}
                 </select>
               </div>
             </section>
 
-            {/* Description & Contact */}
-            <section className="space-y-4">
-              <h2 className="text-xl font-semibold border-b pb-2">Detalles adicionales</h2>
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Descripción</label>
-                <textarea required rows={4} placeholder="Describe el estado del coche, extras, mantenimiento..." className="w-full px-4 py-2 rounded-lg border border-gray-300 focus:ring-2 focus:ring-blue-500 focus:outline-none"></textarea>
+            <section className="space-y-6">
+              <h2 className="text-xl font-black text-blue-600 flex items-center gap-2">
+                <span className="w-8 h-8 rounded-lg bg-blue-50 flex items-center justify-center text-sm">3</span>
+                Contacto y Detalles
+              </h2>
+              <div className="space-y-2">
+                <label className="text-sm font-bold text-gray-600 ml-1">Nombre del vendedor</label>
+                <input required name="seller" value={formData.seller} onChange={handleChange} type="text" placeholder="Tu nombre" className="w-full px-5 py-3 rounded-2xl border-gray-200 bg-gray-50 focus:bg-white focus:ring-2 focus:ring-blue-500 transition outline-none" />
               </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Teléfono de contacto</label>
-                <input required type="tel" placeholder="+34" className="w-full px-4 py-2 rounded-lg border border-gray-300 focus:ring-2 focus:ring-blue-500 focus:outline-none" />
+              <div className="space-y-2">
+                <label className="text-sm font-bold text-gray-600 ml-1">Teléfono (WhatsApp)</label>
+                <input required name="phone" value={formData.phone} onChange={handleChange} type="tel" placeholder="+34 000 000 000" className="w-full px-5 py-3 rounded-2xl border-gray-200 bg-gray-50 focus:bg-white focus:ring-2 focus:ring-blue-500 transition outline-none font-bold" />
               </div>
-            </section>
-
-            {/* Image Upload Placeholder */}
-            <section className="space-y-4">
-              <h2 className="text-xl font-semibold border-b pb-2">Fotos del vehículo</h2>
-              <div className="border-2 border-dashed border-gray-300 rounded-xl p-8 text-center hover:border-blue-500 transition cursor-pointer bg-gray-50">
-                <svg className="w-12 h-12 text-gray-400 mx-auto mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
-                </svg>
-                <p className="text-gray-600">Haz clic para subir fotos o arrástralas aquí</p>
-                <p className="text-xs text-gray-400 mt-1">Máximo 10 fotos (JPG, PNG)</p>
+              <div className="space-y-2">
+                <label className="text-sm font-bold text-gray-600 ml-1">Descripción</label>
+                <textarea required name="description" value={formData.description} onChange={handleChange} rows={4} placeholder="Cuenta algo más sobre el coche..." className="w-full px-5 py-3 rounded-2xl border-gray-200 bg-gray-50 focus:bg-white focus:ring-2 focus:ring-blue-500 transition outline-none"></textarea>
               </div>
             </section>
 
             <button
               type="submit"
               disabled={loading}
-              className={`w-full py-4 rounded-xl font-bold text-lg transition shadow-lg flex items-center justify-center gap-2 ${
-                loading ? 'bg-blue-400 cursor-not-allowed' : 'bg-blue-600 hover:bg-blue-700 shadow-blue-100'
+              className={`w-full py-5 rounded-2xl font-black text-xl transition shadow-2xl flex items-center justify-center gap-3 ${
+                loading ? 'bg-blue-400 cursor-not-allowed' : 'bg-blue-600 hover:bg-blue-700 shadow-blue-200 transform hover:scale-[1.02] active:scale-[0.98]'
               } text-white`}
             >
-              {loading ? (
-                <>
-                  <svg className="animate-spin h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                  </svg>
-                  Publicando...
-                </>
-              ) : "Publicar anuncio ahora"}
+              {loading ? "Publicando..." : "Publicar mi Coche"}
             </button>
           </form>
         </div>
