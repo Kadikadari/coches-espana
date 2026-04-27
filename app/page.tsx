@@ -61,27 +61,36 @@ export default function Home() {
           <Link href="/" className="text-2xl font-black text-blue-600 tracking-tighter">CochesEspaña</Link>
 
           <div className="flex items-center gap-4">
-            <nav className="hidden md:flex items-center gap-8">
+            {/* Desktop Navigation */}
+            <nav className="hidden md:flex items-center gap-6">
               <Link href="/" className="font-bold text-gray-600 hover:text-blue-600 transition">Comprar</Link>
               {user ? (
-                <Link href="/sell" className="bg-blue-600 text-white px-6 py-2.5 rounded-xl hover:bg-blue-700 transition font-black shadow-lg shadow-blue-100">Publicar Anuncio</Link>
+                <>
+                  <Link href="/sell" className="bg-blue-600 text-white px-6 py-2.5 rounded-xl hover:bg-blue-700 transition font-black shadow-lg shadow-blue-100">Publicar Anuncio</Link>
+                  <button onClick={() => supabase.auth.signOut().then(() => window.location.reload())} className="text-sm font-bold text-gray-400">Salir</button>
+                </>
               ) : (
-                <Link href="/login" className="font-bold text-blue-600 hover:underline">Iniciar Sesión</Link>
+                <Link href="/login" className="bg-gray-100 text-gray-800 px-6 py-2.5 rounded-xl hover:bg-gray-200 transition font-bold">Iniciar Sesión</Link>
               )}
             </nav>
 
+            {/* Mobile Menu Button */}
             <button onClick={() => setIsMenuOpen(!isMenuOpen)} className="md:hidden p-2 text-gray-600">
-               <svg className="w-7 h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M4 6h16M4 12h16m-7 6h7" /></svg>
+               <svg className="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M4 6h16M4 12h16m-7 6h7" /></svg>
             </button>
           </div>
         </div>
 
+        {/* Mobile Dropdown */}
         {isMenuOpen && (
           <div className="md:hidden fixed inset-x-0 top-16 bg-white border-b shadow-2xl z-[99]">
             <div className="p-6 space-y-4">
               <Link href="/" onClick={() => setIsMenuOpen(false)} className="block py-3 text-lg font-bold">Comprar</Link>
               {user ? (
-                <Link href="/sell" onClick={() => setIsMenuOpen(false)} className="block w-full bg-blue-600 text-white text-center py-4 rounded-2xl font-black">Publicar Anuncio</Link>
+                <>
+                  <Link href="/sell" onClick={() => setIsMenuOpen(false)} className="block w-full bg-blue-600 text-white text-center py-4 rounded-2xl font-black">Publicar Anuncio</Link>
+                  <button onClick={() => supabase.auth.signOut().then(() => window.location.reload())} className="block w-full py-2 text-center text-red-500 font-bold">Cerrar Sesión</button>
+                </>
               ) : (
                 <Link href="/login" onClick={() => setIsMenuOpen(false)} className="block w-full bg-blue-600 text-white text-center py-4 rounded-2xl font-black">Iniciar Sesión</Link>
               )}
@@ -90,10 +99,13 @@ export default function Home() {
         )}
       </header>
 
+      {/* Hero Section */}
       <section className="bg-blue-600 text-white py-16 md:py-24 px-4 relative">
         <div className="max-w-4xl mx-auto text-center">
-          <h1 className="text-4xl md:text-6xl font-black mb-6 tracking-tight leading-tight">Coches de Segunda Mano en España</h1>
-          <p className="text-lg md:text-xl mb-12 opacity-90 font-light">Identifícate para publicar tu anuncio hoy mismo.</p>
+          <h1 className="text-4xl md:text-6xl font-black mb-6 tracking-tight">Vende y Compra Coche en España</h1>
+          {!user && (
+            <Link href="/login" className="inline-block bg-orange-500 text-white px-8 py-3 rounded-full font-black mb-10 shadow-lg hover:bg-orange-600 transition">Regístrate para publicar gratis</Link>
+          )}
 
           <div className="bg-white p-3 rounded-2xl shadow-2xl flex flex-col md:flex-row gap-3">
             <select value={searchBrand} onChange={(e) => setSearchBrand(e.target.value)} className="flex-1 p-4 rounded-xl border-none bg-gray-50 text-gray-800 font-bold">
