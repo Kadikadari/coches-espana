@@ -73,7 +73,6 @@ export default function CarDetails({ params }: { params: { id: string } }) {
 
       <main className="max-w-7xl mx-auto px-4 py-8">
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-10">
-
           <div className="lg:col-span-2 space-y-8">
             <div className="relative bg-black rounded-[2.5rem] h-[350px] md:h-[600px] overflow-hidden group shadow-2xl">
               {car.images && car.images.length > 0 ? (
@@ -101,7 +100,6 @@ export default function CarDetails({ params }: { params: { id: string } }) {
                 <div className="w-full h-full flex items-center justify-center text-gray-500 font-bold">Sin imágenes</div>
               )}
             </div>
-
             <div className="bg-white p-8 md:p-12 rounded-[2.5rem] shadow-sm border border-gray-100">
               <h1 className="text-4xl md:text-5xl font-black text-gray-900 tracking-tighter mb-6">{car.brand} {car.model}</h1>
               <div className="flex flex-wrap gap-4 mb-10 pb-10 border-b border-gray-100">
@@ -113,12 +111,10 @@ export default function CarDetails({ params }: { params: { id: string } }) {
               <p className="text-gray-600 leading-relaxed text-lg mb-10 whitespace-pre-line">{car.description}</p>
             </div>
           </div>
-
           <div className="space-y-6">
             <div className="bg-white p-8 md:p-10 rounded-[2.5rem] shadow-2xl border border-gray-100 sticky top-24">
               <p className="text-gray-400 font-bold mb-2 uppercase text-[10px] tracking-widest">Precio al contado</p>
               <p className="text-6xl font-black text-blue-600 tracking-tighter mb-8">{car.price}€</p>
-
               <div className="space-y-4">
                 <a href={`tel:${car.phone}`} className="w-full bg-blue-600 text-white py-5 rounded-2xl font-black text-lg flex items-center justify-center gap-3 hover:bg-blue-700 transition shadow-xl">
                   LLAMAR AHORA
