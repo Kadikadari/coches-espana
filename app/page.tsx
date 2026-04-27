@@ -98,8 +98,27 @@ export default function Home() {
     setFilteredCars(results);
   };
 
+  // Structured Data (JSON-LD) for SEO
+  const jsonLd = {
+    "@context": "https://schema.org",
+    "@type": "WebSite",
+    "name": "CochesEspaña",
+    "url": "https://coches-espana.vercel.app",
+    "description": "El mejor sitio para comprar y vender coches de segunda mano en España",
+    "potentialAction": {
+      "@type": "SearchAction",
+      "target": "https://coches-espana.vercel.app/?q={search_term_string}",
+      "query-input": "required name=search_term_string"
+    }
+  };
+
   return (
     <div className="min-h-screen bg-gray-50 font-sans text-gray-900">
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+      />
+
       <header className="bg-white shadow-sm sticky top-0 z-50">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 flex justify-between items-center">
           <Link href="/" className="text-2xl font-bold text-blue-600">CochesEspaña</Link>
@@ -118,8 +137,8 @@ export default function Home() {
           </svg>
         </div>
         <div className="max-w-4xl mx-auto text-center relative z-10">
-          <h2 className="text-4xl md:text-6xl font-black mb-6 tracking-tight">Tu próximo coche te espera</h2>
-          <p className="text-xl mb-12 opacity-90 max-w-2xl mx-auto font-light">La plataforma más segura y rápida para comprar vehículos de ocasión en toda España.</p>
+          <h1 className="text-4xl md:text-6xl font-black mb-6 tracking-tight">Compra y Venta de Coches en España</h1>
+          <p className="text-xl mb-12 opacity-90 max-w-2xl mx-auto font-light">Encuentra los mejores coches de segunda mano y ocasión. Seat, BMW, Audi y más al mejor precio.</p>
 
           <div className="bg-white p-2 md:p-3 rounded-2xl shadow-2xl flex flex-col md:flex-row gap-2 items-center">
             <div className="w-full flex-1 relative group">
@@ -163,7 +182,7 @@ export default function Home() {
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
         <div className="flex justify-between items-end mb-10">
           <div>
-            <h3 className="text-3xl font-black mb-2">Destacados de hoy</h3>
+            <h2 className="text-3xl font-black mb-2">Coches de ocasión destacados</h2>
             <p className="text-gray-500">Explora las mejores ofertas verificadas en tu zona.</p>
           </div>
           {(searchBrand !== "Todos" || searchLocation !== "Toda España") && (
@@ -181,14 +200,14 @@ export default function Home() {
           {filteredCars.map((car) => (
             <Link href={`/cars/${car.id}`} key={car.id} className="bg-white rounded-2xl shadow-sm overflow-hidden hover:shadow-2xl transition-all duration-300 border border-gray-100 block group transform hover:-translate-y-2">
               <div className="relative h-56 w-full">
-                 <img src={car.image} alt={`${car.brand} ${car.model}`} className="w-full h-full object-cover transition duration-500 group-hover:scale-110" />
+                 <img src={car.image} alt={`Coche de segunda mano: ${car.brand} ${car.model}`} className="w-full h-full object-cover transition duration-500 group-hover:scale-110" />
                  <div className="absolute top-3 left-3 bg-white/90 backdrop-blur px-3 py-1 rounded-full text-xs font-black text-blue-600 shadow-sm uppercase tracking-wider">
                     {car.badge}
                  </div>
                  <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/60 to-transparent h-20 opacity-0 group-hover:opacity-100 transition-opacity"></div>
               </div>
               <div className="p-5">
-                <h4 className="text-xl font-bold group-hover:text-blue-600 transition mb-1">{car.brand} {car.model}</h4>
+                <h3 className="text-xl font-bold group-hover:text-blue-600 transition mb-1">{car.brand} {car.model}</h3>
                 <div className="flex items-center text-gray-400 text-sm mb-4 gap-3">
                   <span className="flex items-center gap-1 font-medium italic"><svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" strokeWidth="2"/></svg>{car.year}</span>
                   <span className="flex items-center gap-1"><svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" strokeWidth="2"/></svg>{car.location}</span>
