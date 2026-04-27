@@ -59,18 +59,12 @@ export default function Home() {
   return (
     <div className="min-h-screen bg-gray-50 font-sans text-gray-900">
       <header className="bg-white shadow-sm sticky top-0 z-50">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 flex justify-between items-center">
-          <Link href="/" className="text-xl md:text-2xl font-bold text-blue-600 tracking-tighter">CochesEspaña</Link>
+        <div className="max-w-7xl mx-auto px-4 py-3 flex justify-between items-center">
+          <Link href="/" className="text-xl font-bold text-blue-600 tracking-tighter">CochesEspaña</Link>
 
-          <div className="flex items-center gap-2 md:gap-6">
-            <nav className="hidden md:flex space-x-6 items-center">
-              <Link href="/" className="text-gray-600 hover:text-blue-600 font-medium transition">Comprar</Link>
-              <Link href="/sell" className="text-gray-600 hover:text-blue-600 font-medium transition">Vender</Link>
-            </nav>
-            <Link href="/sell" className="bg-blue-600 text-white px-3 py-2 md:px-5 md:py-2.5 rounded-xl hover:bg-blue-700 transition font-bold shadow-md shadow-blue-100 text-xs md:text-base">
-              Publicar Anuncio
-            </Link>
-          </div>
+          <Link href="/sell" className="bg-blue-600 text-white px-4 py-2 rounded-xl hover:bg-blue-700 transition font-bold shadow-md shadow-blue-100 text-sm whitespace-nowrap">
+            Publicar Anuncio
+          </Link>
         </div>
       </header>
 
