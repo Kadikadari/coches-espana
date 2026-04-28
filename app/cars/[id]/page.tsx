@@ -4,10 +4,6 @@ import { useState, useEffect, use } from "react";
 import Link from "next/link";
 import { supabase } from "@/lib/supabase";
 
-// ملاحظة: لـ SEO حقيقي في Next.js، يفضل أن تكون هذه الصفحة Server Component
-// ولكن بما أننا نستخدم 'use client'، سنعتمد على تحسين الـ Metadata برمجياً
-// وإضافة بيانات هيكلية (JSON-LD)
-
 export default function CarDetails({ params }: { params: Promise<{ id: string }> }) {
   const { id } = use(params);
   const [car, setCar] = useState<any>(null);
@@ -19,9 +15,24 @@ export default function CarDetails({ params }: { params: Promise<{ id: string }>
     async function fetchCarDetails() {
       setLoading(true);
       try {
+        // 1. جلب بيانات المستخدم الحالي
         const { data: { user } } = await supabase.auth.getUser();
         setCurrentUser(user);
 
+        // 2. زيادة المشاهدات عبر الدالة البرمجية (RPC)
+        // نقوم بالزيادة فقط إذا لم يكن المستخدم هو صاحب الإعلان (أو إذا لم يكن مسجلاً)
+        // سنجلب البيانات أولاً للتحقق من المالك
+        const { data: initialData } = await supabase
+          .from('cars')
+          .select('user_id')
+          .eq('id', id)
+          .single();
+
+        if (initialData && (!user || user.id !== initialData.user_id)) {
+           await supabase.rpc('increment_views', { car_id: id });
+        }
+
+        // 3. جلب تفاصيل السيارة كاملة بعد الزيادة
         const { data, error } = await supabase
           .from('cars')
           .select('*')
@@ -29,12 +40,11 @@ export default function CarDetails({ params }: { params: Promise<{ id: string }>
           .single();
 
         if (!error && data) {
-          // تحديث عنوان الصفحة والوصف لـ SEO
-          const seoTitle = `${data.brand} ${data.model} de segunda mano en ${data.location} | CochesEspaña`;
-          const seoDesc = `Compra este ${data.brand} ${data.model} del año ${data.year} con ${data.km}km en ${data.location} por solo ${data.price}€. Encuentra las mejores ofertas de coches usados.`;
+          setCar(data);
+          document.title = `${data.brand} ${data.model} de segunda mano en ${data.location} | CochesEspaña`;
 
-          document.title = seoTitle;
-          // تحديث الـ Meta Description برمجياً
+          // تحديث الـ SEO Meta
+          const seoDesc = `Compra este ${data.brand} ${data.model} del año ${data.year} con ${data.km}km en ${data.location} por solo ${data.price}€.`;
           let metaDesc = document.querySelector('meta[name="description"]');
           if (!metaDesc) {
             metaDesc = document.createElement('meta');
@@ -42,16 +52,9 @@ export default function CarDetails({ params }: { params: Promise<{ id: string }>
             document.head.appendChild(metaDesc);
           }
           metaDesc.setAttribute('content', seoDesc);
-
-          let updatedViews = data.views || 0;
-          if (!user || user.id !== data.user_id) {
-            updatedViews += 1;
-            await supabase.from('cars').update({ views: updatedViews }).eq('id', id);
-          }
-          setCar({ ...data, views: updatedViews });
         }
       } catch (err) {
-        console.error(err);
+        console.error("Error fetching car details:", err);
       } finally {
         setLoading(false);
       }
@@ -74,30 +77,8 @@ export default function CarDetails({ params }: { params: Promise<{ id: string }>
   const cleanPhone = (car.phone || "").replace(/\D/g, '');
   const whatsappUrl = `https://wa.me/${cleanPhone.startsWith('00') ? cleanPhone.substring(2) : cleanPhone}`;
 
-  // بيانات هيكلية لمحرك البحث (JSON-LD)
-  const jsonLd = {
-    "@context": "https://schema.org/",
-    "@type": "Car",
-    "name": `${car.brand} ${car.model}`,
-    "image": car.images,
-    "description": car.description,
-    "brand": { "@type": "Brand", "name": car.brand },
-    "modelDate": car.year,
-    "mileageFromOdometer": { "@type": "QuantitativeValue", "value": car.km, "unitCode": "KMT" },
-    "offers": {
-      "@type": "Offer",
-      "price": car.price,
-      "priceCurrency": "EUR",
-      "availability": "https://schema.org/InStock",
-      "areaServed": car.location
-    }
-  };
-
   return (
     <div className="min-h-screen bg-gray-50 font-sans">
-      {/* حقن البيانات الهيكلية في الصفحة ليقرأها جوجل */}
-      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }} />
-
       <nav className="bg-white border-b border-gray-100 py-4 sticky top-0 z-50">
         <div className="max-w-7xl mx-auto px-4 flex items-center justify-between">
           <Link href="/" className="text-blue-600 hover:text-blue-800 flex items-center gap-2 font-black tracking-tight">
@@ -105,7 +86,7 @@ export default function CarDetails({ params }: { params: Promise<{ id: string }>
             VOLVER
           </Link>
           {isOwner && (
-            <div className="bg-blue-50 text-blue-700 px-4 py-1.5 rounded-full flex items-center gap-2 border border-blue-100">
+            <div className="bg-blue-50 text-blue-700 px-4 py-1.5 rounded-full flex items-center gap-2 border border-blue-100 animate-pulse">
               <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" /><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" /></svg>
               <span className="text-xs font-black uppercase tracking-wider">{car.views || 0} vistas</span>
             </div>
@@ -119,7 +100,7 @@ export default function CarDetails({ params }: { params: Promise<{ id: string }>
             <div className="relative bg-black rounded-[2.5rem] h-[350px] md:h-[600px] overflow-hidden group shadow-2xl">
               {car.images && car.images.length > 0 ? (
                 <>
-                  <img src={car.images[currentImageIndex]} alt={`${car.brand} ${car.model} de segunda mano en ${car.location}`} className="w-full h-full object-contain md:object-cover" />
+                  <img src={car.images[currentImageIndex]} alt={`${car.brand} ${car.model}`} className="w-full h-full object-contain md:object-cover" />
                   {car.images.length > 1 && (
                     <>
                       <div className="absolute bottom-8 right-8 bg-black/60 backdrop-blur-xl text-white px-5 py-2 rounded-full text-xs font-black border border-white/10 z-10">
