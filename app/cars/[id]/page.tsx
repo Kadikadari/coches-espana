@@ -9,11 +9,23 @@ export default function CarDetails({ params }: { params: Promise<{ id: string }>
   const [car, setCar] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
+  const [currentUser, setCurrentUser] = useState<any>(null);
 
   useEffect(() => {
     async function fetchCarDetails() {
       setLoading(true);
       try {
+        // 1. جلب بيانات المستخدم الحالي
+        const { data: { user } } = await supabase.auth.getUser();
+        setCurrentUser(user);
+
+        // 2. زيادة عداد المشاهدات في قاعدة البيانات
+        await supabase.rpc('increment_views', { car_id: id });
+        // ملاحظة: إذا لم ترغب في استخدام rpc، يمكن استخدام update العادي ولكن rpc أفضل لمنع التلاعب
+        // سنستخدم التحديث العادي هنا للتبسيط إذا لم يكن الـ RPC معرفاً
+        await supabase.from('cars').update({ views: (car?.views || 0) + 1 }).eq('id', id);
+
+        // 3. جلب تفاصيل السيارة
         const { data, error } = await supabase
           .from('cars')
           .select('*')
@@ -22,7 +34,6 @@ export default function CarDetails({ params }: { params: Promise<{ id: string }>
 
         if (!error) {
           setCar(data);
-          // تحديث عنوان الصفحة برمجياً للمتصفح
           document.title = `${data.brand} ${data.model} de segunda mano en ${data.location} | CochesEspaña`;
         }
       } catch (err) {
@@ -63,17 +74,26 @@ export default function CarDetails({ params }: { params: Promise<{ id: string }>
     );
   }
 
+  const isOwner = currentUser && currentUser.id === car.user_id;
   const cleanPhone = (car.phone || "").replace(/\D/g, '');
   const whatsappUrl = `https://wa.me/${cleanPhone.startsWith('00') ? cleanPhone.substring(2) : cleanPhone}`;
 
   return (
     <div className="min-h-screen bg-gray-50 font-sans">
       <nav className="bg-white border-b border-gray-100 py-4 sticky top-0 z-50">
-        <div className="max-w-7xl mx-auto px-4 flex items-center">
+        <div className="max-w-7xl mx-auto px-4 flex items-center justify-between">
           <Link href="/" className="text-blue-600 hover:text-blue-800 flex items-center gap-2 font-black tracking-tight">
             <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="3" d="M10 19l-7-7m0 0l7-7m-7 7h18" /></svg>
             VOLVER
           </Link>
+
+          {/* خانة مشاهدات الإعلان - تظهر للبائع فقط */}
+          {isOwner && (
+            <div className="bg-blue-50 text-blue-700 px-4 py-1.5 rounded-full flex items-center gap-2 border border-blue-100">
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" /><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" /></svg>
+              <span className="text-xs font-black uppercase tracking-wider">{car.views || 0} vistas</span>
+            </div>
+          )}
         </div>
       </nav>
 
