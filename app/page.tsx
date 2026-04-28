@@ -9,9 +9,21 @@ const spanishProvinces = [
   "Álava", "Albacete", "Alicante", "Almería", "Asturias", "Ávila", "Badajoz", "Baleares", "Barcelona", "Burgos",
   "Cáceres", "Cádiz", "Cantabria", "Castellón", "Ciudad Real", "Córdoba", "A Coruña", "Cuenca", "Girona", "Granada",
   "Guadalajara", "Guipúzcoa", "Huelva", "Huesca", "Jaén", "León", "Lleida", "Lugo", "Madrid", "Málaga",
-  "Murcia", "Navarra", "Ourense", "Palencia", "Las Palmas", "Pontevedra", "La Rioja", "Salamanca", "Segovia", "Sevilla",
+  "Murcia", "Navarra", "Ourense", "Palencia", "Las Palmas", "Pontevedra", "La Rio_ja", "Salamanca", "Segovia", "Sevilla",
   "Soria", "Tarragona", "Santa Cruz de Tenerife", "Teruel", "Toledo", "Valencia", "Valladolid", "Vizcaya", "Zamora", "Zaragoza", "Ceuta", "Melilla"
 ];
+
+// قاموس لتحويل الأسماء من العربية إلى الإسبانية في حال وجود بيانات قديمة
+const locationMap: { [key: string]: string } = {
+  "أليكانتي": "Alicante",
+  "مدريد": "Madrid",
+  "برشلونة": "Barcelona",
+  "فالنسيا": "Valencia",
+  "إشبيلية": "Sevilla",
+  "غرناطة": "Granada",
+  "مالقة": "Málaga",
+  "مرسية": "Murcia"
+};
 
 const carBrands = [
   "Seat", "Volkswagen", "Renault", "Toyota", "BMW", "Audi", "Mercedes-Benz",
@@ -50,8 +62,17 @@ export default function Home() {
   const handleSearch = () => {
     let results = cars;
     if (searchBrand !== "Todos") results = results.filter(car => car.brand === searchBrand);
-    if (searchLocation !== "Toda España") results = results.filter(car => car.location === searchLocation);
+    if (searchLocation !== "Toda España") {
+      results = results.filter(car => {
+        const mappedLocation = locationMap[car.location] || car.location;
+        return mappedLocation === searchLocation;
+      });
+    }
     setFilteredCars(results);
+  };
+
+  const formatLocation = (loc: string) => {
+    return locationMap[loc] || loc;
   };
 
   return (
@@ -141,7 +162,7 @@ export default function Home() {
                   <div className="flex items-center text-gray-500 text-sm gap-3 font-bold">
                     <span>{car.year}</span>
                     <span>•</span>
-                    <span className="truncate">{car.location}</span>
+                    <span className="truncate">{formatLocation(car.location)}</span>
                   </div>
                 </div>
               </Link>
