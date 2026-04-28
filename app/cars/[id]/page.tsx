@@ -4,6 +4,10 @@ import { useState, useEffect, use } from "react";
 import Link from "next/link";
 import { supabase } from "@/lib/supabase";
 
+// ملاحظة: لـ SEO حقيقي في Next.js، يفضل أن تكون هذه الصفحة Server Component
+// ولكن بما أننا نستخدم 'use client'، سنعتمد على تحسين الـ Metadata برمجياً
+// وإضافة بيانات هيكلية (JSON-LD)
+
 export default function CarDetails({ params }: { params: Promise<{ id: string }> }) {
   const { id } = use(params);
   const [car, setCar] = useState<any>(null);
@@ -15,11 +19,9 @@ export default function CarDetails({ params }: { params: Promise<{ id: string }>
     async function fetchCarDetails() {
       setLoading(true);
       try {
-        // 1. جلب بيانات المستخدم الحالي أولاً
         const { data: { user } } = await supabase.auth.getUser();
         setCurrentUser(user);
 
-        // 2. جلب بيانات السيارة
         const { data, error } = await supabase
           .from('cars')
           .select('*')
@@ -27,19 +29,26 @@ export default function CarDetails({ params }: { params: Promise<{ id: string }>
           .single();
 
         if (!error && data) {
-          let updatedViews = data.views || 0;
+          // تحديث عنوان الصفحة والوصف لـ SEO
+          const seoTitle = `${data.brand} ${data.model} de segunda mano en ${data.location} | CochesEspaña`;
+          const seoDesc = `Compra este ${data.brand} ${data.model} del año ${data.year} con ${data.km}km en ${data.location} por solo ${data.price}€. Encuentra las mejores ofertas de coches usados.`;
 
-          // 3. زيادة المشاهدات فقط إذا كان الزائر ليس هو صاحب الإعلان
+          document.title = seoTitle;
+          // تحديث الـ Meta Description برمجياً
+          let metaDesc = document.querySelector('meta[name="description"]');
+          if (!metaDesc) {
+            metaDesc = document.createElement('meta');
+            metaDesc.setAttribute('name', 'description');
+            document.head.appendChild(metaDesc);
+          }
+          metaDesc.setAttribute('content', seoDesc);
+
+          let updatedViews = data.views || 0;
           if (!user || user.id !== data.user_id) {
             updatedViews += 1;
-            await supabase
-              .from('cars')
-              .update({ views: updatedViews })
-              .eq('id', id);
+            await supabase.from('cars').update({ views: updatedViews }).eq('id', id);
           }
-
           setCar({ ...data, views: updatedViews });
-          document.title = `${data.brand} ${data.model} de segunda mano en ${data.location} | CochesEspaña`;
         }
       } catch (err) {
         console.error(err);
@@ -51,47 +60,50 @@ export default function CarDetails({ params }: { params: Promise<{ id: string }>
   }, [id]);
 
   const nextImage = () => {
-    if (car?.images) {
-      setCurrentImageIndex((prev) => (prev + 1) % car.images.length);
-    }
+    if (car?.images) setCurrentImageIndex((prev) => (prev + 1) % car.images.length);
   };
 
   const prevImage = () => {
-    if (car?.images) {
-      setCurrentImageIndex((prev) => (prev - 1 + car.images.length) % car.images.length);
-    }
+    if (car?.images) setCurrentImageIndex((prev) => (prev - 1 + car.images.length) % car.images.length);
   };
 
-  if (loading) {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-gray-50">
-        <div className="animate-spin rounded-full h-12 w-12 border-4 border-blue-100 border-b-blue-600"></div>
-      </div>
-    );
-  }
-
-  if (!car) {
-    return (
-      <div className="min-h-screen flex flex-col items-center justify-center bg-gray-50 p-4 text-center">
-        <h1 className="text-2xl font-black text-gray-800 mb-4">Vehículo no encontrado.</h1>
-        <Link href="/" className="bg-blue-600 text-white px-8 py-3 rounded-2xl font-bold">Volver al inicio</Link>
-      </div>
-    );
-  }
+  if (loading) return <div className="min-h-screen flex items-center justify-center bg-gray-50"><div className="animate-spin rounded-full h-12 w-12 border-4 border-blue-100 border-b-blue-600"></div></div>;
+  if (!car) return <div className="min-h-screen flex flex-col items-center justify-center bg-gray-50 p-4 text-center"><h1 className="text-2xl font-black text-gray-800 mb-4">Vehículo no encontrado.</h1><Link href="/" className="bg-blue-600 text-white px-8 py-3 rounded-2xl font-bold">Volver al inicio</Link></div>;
 
   const isOwner = currentUser && currentUser.id === car.user_id;
   const cleanPhone = (car.phone || "").replace(/\D/g, '');
   const whatsappUrl = `https://wa.me/${cleanPhone.startsWith('00') ? cleanPhone.substring(2) : cleanPhone}`;
 
+  // بيانات هيكلية لمحرك البحث (JSON-LD)
+  const jsonLd = {
+    "@context": "https://schema.org/",
+    "@type": "Car",
+    "name": `${car.brand} ${car.model}`,
+    "image": car.images,
+    "description": car.description,
+    "brand": { "@type": "Brand", "name": car.brand },
+    "modelDate": car.year,
+    "mileageFromOdometer": { "@type": "QuantitativeValue", "value": car.km, "unitCode": "KMT" },
+    "offers": {
+      "@type": "Offer",
+      "price": car.price,
+      "priceCurrency": "EUR",
+      "availability": "https://schema.org/InStock",
+      "areaServed": car.location
+    }
+  };
+
   return (
     <div className="min-h-screen bg-gray-50 font-sans">
+      {/* حقن البيانات الهيكلية في الصفحة ليقرأها جوجل */}
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }} />
+
       <nav className="bg-white border-b border-gray-100 py-4 sticky top-0 z-50">
         <div className="max-w-7xl mx-auto px-4 flex items-center justify-between">
           <Link href="/" className="text-blue-600 hover:text-blue-800 flex items-center gap-2 font-black tracking-tight">
             <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="3" d="M10 19l-7-7m0 0l7-7m-7 7h18" /></svg>
             VOLVER
           </Link>
-
           {isOwner && (
             <div className="bg-blue-50 text-blue-700 px-4 py-1.5 rounded-full flex items-center gap-2 border border-blue-100">
               <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" /><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" /></svg>
@@ -107,7 +119,7 @@ export default function CarDetails({ params }: { params: Promise<{ id: string }>
             <div className="relative bg-black rounded-[2.5rem] h-[350px] md:h-[600px] overflow-hidden group shadow-2xl">
               {car.images && car.images.length > 0 ? (
                 <>
-                  <img src={car.images[currentImageIndex]} alt={`${car.brand} ${car.model} en ${car.location}`} className="w-full h-full object-contain md:object-cover" />
+                  <img src={car.images[currentImageIndex]} alt={`${car.brand} ${car.model} de segunda mano en ${car.location}`} className="w-full h-full object-contain md:object-cover" />
                   {car.images.length > 1 && (
                     <>
                       <div className="absolute bottom-8 right-8 bg-black/60 backdrop-blur-xl text-white px-5 py-2 rounded-full text-xs font-black border border-white/10 z-10">
@@ -123,7 +135,7 @@ export default function CarDetails({ params }: { params: Promise<{ id: string }>
                   )}
                 </>
               ) : (
-                <div className="w-full h-full flex items-center justify-center text-gray-500 font-bold">Sin imágenes</div>
+                <div className="w-full h-full flex items-center justify-center text-gray-400 font-black">SIN FOTO</div>
               )}
             </div>
 
@@ -144,12 +156,8 @@ export default function CarDetails({ params }: { params: Promise<{ id: string }>
               <p className="text-gray-400 font-bold mb-2 uppercase text-[10px] tracking-widest">Precio al contado</p>
               <p className="text-6xl font-black text-blue-600 tracking-tighter mb-8">{car.price}€</p>
               <div className="space-y-4">
-                <a href={`tel:${car.phone}`} className="w-full bg-blue-600 text-white py-5 rounded-[1.5rem] font-black text-lg flex items-center justify-center gap-3 hover:bg-blue-700 transition shadow-xl">
-                  LLAMAR AHORA
-                </a>
-                <a href={whatsappUrl} target="_blank" rel="noopener noreferrer" className="w-full bg-[#25D366] text-white py-5 rounded-[1.5rem] font-black text-lg flex items-center justify-center gap-3 hover:bg-[#20ba59] transition shadow-xl">
-                  WHATSAPP
-                </a>
+                <a href={`tel:${car.phone}`} className="w-full bg-blue-600 text-white py-5 rounded-[1.5rem] font-black text-lg flex items-center justify-center gap-3 hover:bg-blue-700 transition shadow-xl">LLAMAR AHORA</a>
+                <a href={whatsappUrl} target="_blank" rel="noopener noreferrer" className="w-full bg-[#25D366] text-white py-5 rounded-[1.5rem] font-black text-lg flex items-center justify-center gap-3 hover:bg-[#20ba59] transition shadow-xl">WHATSAPP</a>
               </div>
             </div>
           </div>
