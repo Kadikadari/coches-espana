@@ -15,25 +15,30 @@ export default function CarDetails({ params }: { params: Promise<{ id: string }>
     async function fetchCarDetails() {
       setLoading(true);
       try {
-        // 1. جلب بيانات المستخدم الحالي
+        // 1. جلب بيانات المستخدم الحالي أولاً
         const { data: { user } } = await supabase.auth.getUser();
         setCurrentUser(user);
 
-        // 2. زيادة عداد المشاهدات في قاعدة البيانات
-        await supabase.rpc('increment_views', { car_id: id });
-        // ملاحظة: إذا لم ترغب في استخدام rpc، يمكن استخدام update العادي ولكن rpc أفضل لمنع التلاعب
-        // سنستخدم التحديث العادي هنا للتبسيط إذا لم يكن الـ RPC معرفاً
-        await supabase.from('cars').update({ views: (car?.views || 0) + 1 }).eq('id', id);
-
-        // 3. جلب تفاصيل السيارة
+        // 2. جلب بيانات السيارة
         const { data, error } = await supabase
           .from('cars')
           .select('*')
           .eq('id', id)
           .single();
 
-        if (!error) {
-          setCar(data);
+        if (!error && data) {
+          let updatedViews = data.views || 0;
+
+          // 3. زيادة المشاهدات فقط إذا كان الزائر ليس هو صاحب الإعلان
+          if (!user || user.id !== data.user_id) {
+            updatedViews += 1;
+            await supabase
+              .from('cars')
+              .update({ views: updatedViews })
+              .eq('id', id);
+          }
+
+          setCar({ ...data, views: updatedViews });
           document.title = `${data.brand} ${data.model} de segunda mano en ${data.location} | CochesEspaña`;
         }
       } catch (err) {
@@ -87,7 +92,6 @@ export default function CarDetails({ params }: { params: Promise<{ id: string }>
             VOLVER
           </Link>
 
-          {/* خانة مشاهدات الإعلان - تظهر للبائع فقط */}
           {isOwner && (
             <div className="bg-blue-50 text-blue-700 px-4 py-1.5 rounded-full flex items-center gap-2 border border-blue-100">
               <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" /><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" /></svg>
@@ -100,7 +104,6 @@ export default function CarDetails({ params }: { params: Promise<{ id: string }>
       <main className="max-w-7xl mx-auto px-4 py-8">
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-10">
           <div className="lg:col-span-2 space-y-8">
-            {/* Slider */}
             <div className="relative bg-black rounded-[2.5rem] h-[350px] md:h-[600px] overflow-hidden group shadow-2xl">
               {car.images && car.images.length > 0 ? (
                 <>
